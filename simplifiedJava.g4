@@ -22,7 +22,7 @@ cmdBlock: (command)+;
 command: controlCmd
          | attributionCmd ';'
          | ioCmd ';'
-         | expression ';'
+         | functionCall ';'
          | 'return' expression ';'
          | 'break' ';'
          ;
@@ -45,17 +45,17 @@ ioCmd: 'print' '(' expressionList ')'
 
 expressionList: expression (',' expression)*;
 
-expression: '!' expression
-            | '-' expression
-            | expression op=('*'|'/') expression
-            | expression op=('+'|'-') expression
-            | expression op=('=='|'!=') expression
-            | expression op=('>='|'<='|'>'|'<') expression
-            | '(' expression ')'
-            | ID
-            | functionCall
-            | literal
-            ;
+expression: '(' expression ')'
+                | '!' expression
+                | '-' expression
+                | expression ('*'|'/') expression
+                | expression ('+'|'-') expression
+                | expression ('<'|'>'|'<='|'>=') expression
+                | expression ('=='|'!=') expression
+                | functionCall
+                | literal
+                | ID
+                ;
 
 functionCall: ID '(' (expressionList)? ')';
 
