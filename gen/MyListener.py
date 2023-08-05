@@ -90,15 +90,19 @@ class MyListener(simplifiedJavaListener):
         if type(parent) == simplifiedJavaParser.CommandContext:
             if var in self.symbolTable:
                 if self.symbolTable[var]["isConst"]:
-                    exit("Variable " + var + " is const")
+                    exit(f"Variable {var} is constant")
                 else:
-                    if ctx.exprType != self.symbolTable[var]["type"]:
-                        exit("Variable " + var + " is not of type " + ctx.exprType)
+                    if ctx.exprType == "int" and self.symbolTable[var]["type"] == "float":
+                        ctx.exprType = "float"
+                    elif ctx.exprType == "float" and self.symbolTable[var]["type"] == "int":
+                        ctx.exprType = "int"
+                    elif ctx.exprType != self.symbolTable[var]["type"]:
+                        exit(f"Variable {var} is not of type {ctx.exprType}")
             else:
-                exit("Variable " + var + " not declared")
+                exit(f"Variable {var} not declared")
         else:
             if var in self.symbolTable:
-                exit("Variable " + var + " already declared")
+                exit(f"Variable {var} already declared")
             else:
                 self.symbolTable[var] = {"isConst": True, "type": ctx.exprType}
 
@@ -110,20 +114,65 @@ class MyListener(simplifiedJavaListener):
     def exitExpressionList(self, ctx: simplifiedJavaParser.ExpressionListContext):
         pass
 
-    # TODO
+    # OK
     def exitExpression(self, ctx: simplifiedJavaParser.ExpressionContext):
         ctx.exprType = None
         if ctx.getChildCount() == 1:
             if ctx.ID():
-                identifier = ctx.ID().getText()
-                if identifier in self.symbolTable:
-                    ctx.exprType = self.symbolTable[identifier]["type"]
+                varIdentifier = ctx.ID().getText()
+                if varIdentifier in self.symbolTable:
+                    ctx.exprType = self.symbolTable[varIdentifier]["type"]
                 else:
-                    exit("Variable " + ctx.ID().getText() + " not declared")
+                    exit(f"Variable {varIdentifier} not declared")
             elif ctx.literal():
                 ctx.exprType = ctx.literal().varType
             elif ctx.functionCall():
                 pass  # TODO: Check if function exists
+        elif ctx.getChildCount() == 2:
+            op = ctx.getChild(0).getText()
+            expression = ctx.expression(0)
+            if op == '!':
+                if expression.exprType == "bool":
+                    ctx.exprType = "bool"
+                else:
+                    exit(f"{expression.getText()} is not of type bool")
+            elif op == '-':
+                if expression.exprType == "int" or expression.exprType == "float":
+                    ctx.exprType = expression.exprType
+                else:
+                    exit(f"{expression.getText()} is not of type int or float")
+        elif ctx.getChildCount() == 3:
+            if ctx.getChild(0) == '(':
+                ctx.exprType = ctx.expression(1).exprType
+            else:
+                op = ctx.getChild(1).getText()
+                expr1 = ctx.expression(0)
+                expr2 = ctx.expression(1)
+                if op == '+' or op == '-' or op == '*':
+                    if expr1.exprType != "int" and expr1.exprType != "float":
+                        exit(f"{expr1.getText()} is not of type int or float")
+                    elif expr2.exprType != "int" and expr2.exprType != "float":
+                        exit(f"{expr2.getText()} is not of type int or float")
+                    elif expr1.exprType == expr2.exprType:
+                        ctx.exprType = expr1.exprType
+                    elif expr1.exprType == "float" or expr2.exprType == "float":
+                        ctx.exprType = "float"
+                elif op == '/':
+                    if expr1.exprType != "int" and expr1.exprType != "float":
+                        exit(f"{expr1.getText()} is not of type int or float")
+                    elif expr2.exprType != "int" and expr2.exprType != "float":
+                        exit(f"{expr2.getText()} is not of type int or float")
+                    else:
+                        ctx.exprType = "float"
+                elif op == '<' or op == '>' or op == '<=' or op == '>=' or op == '==' or op == '!=':
+                    if expr1.exprType == expr2.exprType:
+                        ctx.exprType = "bool"
+                    elif expr1.exprType == "int" and expr2.exprType == "float":
+                        ctx.exprType = "bool"
+                    elif expr1.exprType == "float" and expr2.exprType == "int":
+                        ctx.exprType = "bool"
+                    else:
+                        exit(f"Cannot compare {expr1.exprType} with {expr2.exprType}")
 
     # OK
     def exitVariableList(self, ctx: simplifiedJavaParser.VariableListContext):

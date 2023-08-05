@@ -1403,9 +1403,7 @@ class simplifiedJavaParser ( Parser ):
         def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
             super().__init__(parent, invokingState)
             self.parser = parser
-            self.e1 = None # ExpressionContext
             self.op = None # Token
-            self.e2 = None # ExpressionContext
 
         def expression(self, i:int=None):
             if i is None:
@@ -1453,7 +1451,7 @@ class simplifiedJavaParser ( Parser ):
             la_ = self._interp.adaptivePredict(self._input,21,self._ctx)
             if la_ == 1:
                 self.state = 204
-                self.match(simplifiedJavaParser.T__1)
+                localctx.op = self.match(simplifiedJavaParser.T__1)
                 self.state = 205
                 self.expression(0)
                 self.state = 206
@@ -1469,7 +1467,7 @@ class simplifiedJavaParser ( Parser ):
 
             elif la_ == 3:
                 self.state = 210
-                self.match(simplifiedJavaParser.T__19)
+                localctx.op = self.match(simplifiedJavaParser.T__19)
                 self.state = 211
                 self.expression(8)
                 pass
@@ -1504,7 +1502,6 @@ class simplifiedJavaParser ( Parser ):
                     la_ = self._interp.adaptivePredict(self._input,22,self._ctx)
                     if la_ == 1:
                         localctx = simplifiedJavaParser.ExpressionContext(self, _parentctx, _parentState)
-                        localctx.e1 = _prevctx
                         self.pushNewRecursionContext(localctx, _startState, self.RULE_expression)
                         self.state = 217
                         if not self.precpred(self._ctx, 7):
@@ -1519,12 +1516,11 @@ class simplifiedJavaParser ( Parser ):
                             self._errHandler.reportMatch(self)
                             self.consume()
                         self.state = 219
-                        localctx.e2 = self.expression(8)
+                        self.expression(8)
                         pass
 
                     elif la_ == 2:
                         localctx = simplifiedJavaParser.ExpressionContext(self, _parentctx, _parentState)
-                        localctx.e1 = _prevctx
                         self.pushNewRecursionContext(localctx, _startState, self.RULE_expression)
                         self.state = 220
                         if not self.precpred(self._ctx, 6):
@@ -1539,12 +1535,11 @@ class simplifiedJavaParser ( Parser ):
                             self._errHandler.reportMatch(self)
                             self.consume()
                         self.state = 222
-                        localctx.e2 = self.expression(7)
+                        self.expression(7)
                         pass
 
                     elif la_ == 3:
                         localctx = simplifiedJavaParser.ExpressionContext(self, _parentctx, _parentState)
-                        localctx.e1 = _prevctx
                         self.pushNewRecursionContext(localctx, _startState, self.RULE_expression)
                         self.state = 223
                         if not self.precpred(self._ctx, 5):
@@ -1559,12 +1554,11 @@ class simplifiedJavaParser ( Parser ):
                             self._errHandler.reportMatch(self)
                             self.consume()
                         self.state = 225
-                        localctx.e2 = self.expression(6)
+                        self.expression(6)
                         pass
 
                     elif la_ == 4:
                         localctx = simplifiedJavaParser.ExpressionContext(self, _parentctx, _parentState)
-                        localctx.e1 = _prevctx
                         self.pushNewRecursionContext(localctx, _startState, self.RULE_expression)
                         self.state = 226
                         if not self.precpred(self._ctx, 4):
@@ -1579,7 +1573,7 @@ class simplifiedJavaParser ( Parser ):
                             self._errHandler.reportMatch(self)
                             self.consume()
                         self.state = 228
-                        localctx.e2 = self.expression(5)
+                        self.expression(5)
                         pass
 
              
