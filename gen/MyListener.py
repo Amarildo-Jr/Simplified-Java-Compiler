@@ -25,7 +25,9 @@ class MyListener(simplifiedJavaListener):
 
     # Exit a parse tree produced by simplifiedJavaParser#function.
     def exitFunction(self, ctx: simplifiedJavaParser.FunctionContext):
-        pass
+        functionName = ctx.getChild(0).ID().getText()
+        if self.symbolTable[functionName]["hasReturn"] and self.symbolTable[functionName].get("value") is None:
+            exit(f"Function {functionName} expects {self.symbolTable[functionName]['type']} return")
 
     def enterFunctionDeclaration(self, ctx: simplifiedJavaParser.FunctionDeclarationContext):
         functionName = ctx.ID().getText()
@@ -38,7 +40,7 @@ class MyListener(simplifiedJavaListener):
             exit(f"Function {functionName} already declared")
         else:
             hasReturn = True if functionReturn != "void" else False
-            self.symbolTable[functionName] = {"hasReturn": hasReturn, "type": functionReturn}
+            self.symbolTable[functionName] = {"hasReturn": hasReturn, "type": functionReturn, "parameters": {}}
 
     # Exit a parse tree produced by simplifiedJavaParser#functionDeclaration.
     def exitFunctionDeclaration(self, ctx: simplifiedJavaParser.FunctionDeclarationContext):
@@ -55,7 +57,6 @@ class MyListener(simplifiedJavaListener):
             parametersDict[f'{varList[i].getText()}'] = typesList[i].getText()
         ctx.parametersDict = parametersDict
 
-        self.symbolTable[functionName].setdefault("parameters", {})
         for var, varType in parametersDict.items():
             if var in self.symbolTable:
                 exit(f"Variable {var} already declared")
@@ -65,8 +66,15 @@ class MyListener(simplifiedJavaListener):
     # Exit a parse tree produced by simplifiedJavaParser#functionCall.
     def exitFunctionCall(self, ctx: simplifiedJavaParser.FunctionCallContext):
         functionName = ctx.ID().getText()
-        parametersQuantity = len(self.symbolTable[functionName]["parameters"])
-        parametersReceivedQuantity = ctx.expressionList().expressionQuantity
+        functionParameters = self.symbolTable[functionName].get("parameters")
+
+        parametersQuantity = 0
+        if functionParameters is not None:
+            parametersQuantity = len(functionParameters)
+
+        parametersReceivedQuantity = 0
+        if ctx.expressionList() is not None:
+            parametersReceivedQuantity = ctx.expressionList().expressionQuantity
 
         if functionName not in self.symbolTable:
             exit(f"Function {functionName} not declared")
@@ -118,7 +126,7 @@ class MyListener(simplifiedJavaListener):
 
             if type(functionCtx) == simplifiedJavaParser.FunctionContext:
                 if functionDeclarationCtx.type_().getText() != ctx.expression().exprType:
-                    exit(f"Function {functionDeclarationCtx.ID().getText()} expects {functionDeclarationCtx.type_().getText()} type, but {ctx.expression().exprType} was given")
+                    exit(f"Function {functionDeclarationCtx.ID().getText()} expects {functionDeclarationCtx.type_().getText()} type return, but {ctx.expression().exprType} was given")
             else:
                 exit("Return command only allowed in functions")
 
@@ -146,6 +154,7 @@ class MyListener(simplifiedJavaListener):
         parent = ctx.parentCtx
         var = ctx.ID().getText()
         ctx.exprType = ctx.expression().exprType
+        # print(ctx.getText())
         if type(parent) == simplifiedJavaParser.CommandContext:
             if var in self.symbolTable:
                 if self.symbolTable[var]["isConst"]:
@@ -247,6 +256,10 @@ class MyListener(simplifiedJavaListener):
                         ctx.exprType = "bool"
                     else:
                         exit(f"Cannot compare {expr1.exprType} with {expr2.exprType}")
+
+                # if op == '+':
+                #     ctx.value = expr1.value + expr2.value
+                #     print(ctx.value)
 
     # OK
     def exitVariableList(self, ctx: simplifiedJavaParser.VariableListContext):
