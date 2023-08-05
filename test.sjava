@@ -1,11 +1,14 @@
+media (float n1, float n2) : float
+    var:
+        m : float;
+    m = 3.2;
+    return m;
+end
+
 main:
     var:
-        a, b, temp : int;
-        st : str;
-        bol : bool;
-        const i = 10, j = "a";
-    a = 10;
-    st = "Hello World";
-    temp = -a;
-    temp = 20.77 + 20;
+        teste1, teste2, teste3 : float;
+    teste1 = 1.2;
+    teste2 = 3.2;
+    teste3 = media(teste1, teste2);
 end
