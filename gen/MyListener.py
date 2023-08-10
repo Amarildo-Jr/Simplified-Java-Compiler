@@ -7,7 +7,7 @@ else:
 
 
 class MyListener(simplifiedJavaListener):
-    symbolTable = {}
+    symbolTable: dict = {}
 
     # Enter a parse tree produced by simplifiedJavaParser#program.
     def enterProgram(self, ctx: simplifiedJavaParser.ProgramContext):
@@ -59,7 +59,7 @@ class MyListener(simplifiedJavaListener):
             if var in self.symbolTable:
                 exit(f"Variable {var} already declared")
             else:
-                self.symbolTable[functionName]["parameters"].setdefault(var, {"isConst": False, "type": varType})
+                self.symbolTable[functionName]["parameters"].setdefault(var, {"isInit": True, "isConst": False, "type": varType})
 
     # Exit a parse tree produced by simplifiedJavaParser#functionCall.
     def exitFunctionCall(self, ctx: simplifiedJavaParser.FunctionCallContext):
@@ -102,14 +102,27 @@ class MyListener(simplifiedJavaListener):
     def exitVariableDeclaration(self, ctx: simplifiedJavaParser.VariableDeclarationContext):
         line = ctx.start.line
         column = ctx.start.column
+        ancestor = ctx.parentCtx
+        while type(ancestor) != simplifiedJavaParser.MainFunctionContext and type(ancestor) != simplifiedJavaParser.FunctionContext:
+            ancestor = ancestor.parentCtx
         if ctx.getChildCount() == 4:
             ctx.varType = ctx.type_().varType
             ctx.variableList = ctx.variableList().variableList
             for var in ctx.variableList:
-                if var in self.symbolTable:
-                    exit(f"{line}:{column} : Variable {var} already declared")
-                else:
-                    self.symbolTable[var] = {"isInit": False, "isConst": False, "type": ctx.varType}
+                if type(ancestor) == simplifiedJavaParser.MainFunctionContext:
+                    symbolTable = self.symbolTable
+                    if var in symbolTable:
+                        exit(f"line {line}:{column} Variable {var} already declared")
+                    else:
+                        self.symbolTable[var] = {"isInit": False, "isConst": False, "type": ctx.varType}
+                elif type(ancestor) == simplifiedJavaParser.FunctionContext:
+                    functionName = ancestor.getChild(0).ID().getText()
+                    parameters = self.symbolTable[functionName]["parameters"]
+                    symbolTable = dict(self.symbolTable[functionName], **parameters)
+                    if var in symbolTable:
+                        exit(f"line {line}:{column} Variable {var} already declared")
+                    else:
+                        self.symbolTable[functionName][var] = {"isInit": False, "isConst": False, "type": ctx.varType}
 
     # Exit a parse tree produced by simplifiedJavaParser#cmdBlock.
     def exitCmdBlock(self, ctx: simplifiedJavaParser.CmdBlockContext):
@@ -117,21 +130,61 @@ class MyListener(simplifiedJavaListener):
 
     # Exit a parse tree produced by simplifiedJavaParser#command.
     def exitCommand(self, ctx: simplifiedJavaParser.CommandContext):
-        if ctx.getChild(0).getText() == "return":
+        line = ctx.start.line
+        column = ctx.start.column
+        ancestor = ctx.parentCtx
+        while type(ancestor) != simplifiedJavaParser.MainFunctionContext and type(ancestor) != simplifiedJavaParser.FunctionContext:
+            ancestor = ancestor.parentCtx
+        child = ctx.getChild(0)
+        if child.getText() == "return":
             functionCtx = ctx.parentCtx.parentCtx
             functionDeclarationCtx = functionCtx.getChild(0)
 
             if functionDeclarationCtx.type_() is None:
-                exit(f"Function {functionDeclarationCtx.ID().getText()} does not expect return")
+                exit(f"line {line}:{column} Function {functionDeclarationCtx.ID().getText()} does not expect return")
 
             if type(functionCtx) == simplifiedJavaParser.FunctionContext:
                 if functionDeclarationCtx.type_().getText() != ctx.expression().exprType:
-                    exit(f"Function {functionDeclarationCtx.ID().getText()} expects {functionDeclarationCtx.type_().getText()} type return, but {ctx.expression().exprType} was given")
+                    exit(f"line {line}:{column} Function {functionDeclarationCtx.ID().getText()} expects {functionDeclarationCtx.type_().getText()} type return, but {ctx.expression().exprType} was given")
             else:
-                exit("Return command only allowed in functions")
+                exit(f"line {line}:{column} Return command only allowed in functions")
 
             functionName = functionDeclarationCtx.ID().getText()
-            self.symbolTable[functionName]["value"] = self.symbolTable[ctx.expression().ID().getText()]["value"]
+            self.symbolTable[functionName]["value"] = ctx.expression().value
+        if child.getText() == "break":
+            while type(ctx.parentCtx) != simplifiedJavaParser.WhileCmdContext and type(ctx.parentCtx) != simplifiedJavaParser.ProgramContext:
+                ctx = ctx.parentCtx
+            if type(ctx.parentCtx) == simplifiedJavaParser.ProgramContext:
+                exit(f"line {line}:{column} Break command only allowed in while commands")
+        if type(child) == simplifiedJavaParser.IoCmdContext:
+            ioCmdCtx = ctx.getChild(0)
+            if ioCmdCtx.getChild(0).getText() == "print":
+                pass
+            if ioCmdCtx.getChild(0).getText() == "scanf":
+                variableList = ioCmdCtx.variableList().variableList
+                if type(ancestor) == simplifiedJavaParser.MainFunctionContext:
+                    for var in variableList:
+                        symbolTable = self.symbolTable
+                        if type(ancestor) == simplifiedJavaParser.MainFunctionContext:
+                            symbolTable = self.symbolTable
+                        elif type(ancestor) == simplifiedJavaParser.FunctionContext:
+                            functionName = ancestor.getChild(0).ID().getText()
+                            symbolTable = self.symbolTable[functionName]
+                        if var not in symbolTable:
+                            exit(f"line {line}:{column} Variable {var} not declared")
+                        elif symbolTable[var]["isConst"]:
+                            exit(f"line {line}:{column} Variable {var} is constant")
+                        else:
+                            symbolTable[var]["isInit"] = True
+                else:
+                    functionName = ancestor.getChild(0).ID().getText()
+                    for var in variableList:
+                        if var not in self.symbolTable[functionName]:
+                            exit(f"line {line}:{column} Variable {var} not declared")
+                        elif self.symbolTable[functionName][var]["isConst"]:
+                            exit(f"line {line}:{column} Variable {var} is constant")
+                        else:
+                            self.symbolTable[functionName][var]["isInit"] = True
 
     # Exit a parse tree produced by simplifiedJavaParser#controlCmd.
     def exitControlCmd(self, ctx: simplifiedJavaParser.ControlCmdContext):
@@ -154,30 +207,41 @@ class MyListener(simplifiedJavaListener):
         line = ctx.start.line
         column = ctx.start.column
         parent = ctx.parentCtx
+        ancestor = ctx.parentCtx
+        while type(ancestor) != simplifiedJavaParser.MainFunctionContext and type(ancestor) != simplifiedJavaParser.FunctionContext:
+            ancestor = ancestor.parentCtx
         var = ctx.ID().getText()
         ctx.exprType = ctx.expression().exprType
-        # print(ctx.getText())
+        symbolTable = self.symbolTable
+        if type(ancestor) == simplifiedJavaParser.MainFunctionContext:
+            symbolTable = self.symbolTable
+        elif type(ancestor) == simplifiedJavaParser.FunctionContext:
+            functionName = ancestor.getChild(0).ID().getText()
+            parameters = self.symbolTable[functionName]["parameters"]
+            symbolTable = dict(self.symbolTable[functionName], **parameters)
         if type(parent) == simplifiedJavaParser.CommandContext:
-            if var in self.symbolTable:
-                if self.symbolTable[var]["isConst"]:
-                    exit(f"{line}:{column} : Variable {var} is constant")
+            if var in symbolTable:
+                if symbolTable[var]["isConst"]:
+                    exit(f"line {line}:{column} Variable {var} is constant")
                 else:
-                    self.symbolTable[var]["isInit"] = True
-                    if ctx.exprType == "int" and self.symbolTable[var]["type"] == "float":
+                    symbolTable[var]["isInit"] = True
+                    if ctx.exprType == "int" and symbolTable[var]["type"] == "float":
                         ctx.exprType = "float"
-                    elif ctx.exprType == "float" and self.symbolTable[var]["type"] == "int":
+                    elif ctx.exprType == "float" and symbolTable[var]["type"] == "int":
                         ctx.exprType = "int"
-                    elif ctx.exprType != self.symbolTable[var]["type"]:
-                        exit(f"{line}:{column} : Variable {var} is not of type {ctx.exprType}")
+                    elif ctx.exprType != symbolTable[var]["type"]:
+                        exit(f"line {line}:{column} Variable {var} is not of type {ctx.exprType}")
 
-                self.symbolTable[var]["value"] = ctx.expression().value
+                symbolTable[var]["value"] = ctx.expression().value
             else:
-                exit(f"{line}:{column} : Variable {var} not declared")
+                exit(f"line {line}:{column} Variable {var} not declared")
         else:
-            if var in self.symbolTable:
-                exit(f"{line}:{column} : Variable {var} already declared")
+            if var in symbolTable:
+                exit(f"line {line}:{column} Variable {var} already declared")
             else:
-                self.symbolTable[var] = {"isInit": True, "isConst": False, "type": ctx.exprType, "value": ctx.expression().value}
+                symbolTable[var] = {"isInit": True, "isConst": True, "type": ctx.exprType, "value": ctx.expression().value}
+
+
 
     # Exit a parse tree produced by simplifiedJavaParser#ioCmd.
     def exitIoCmd(self, ctx: simplifiedJavaParser.IoCmdContext):
@@ -198,18 +262,28 @@ class MyListener(simplifiedJavaListener):
     def exitExpression(self, ctx: simplifiedJavaParser.ExpressionContext):
         line = ctx.start.line
         column = ctx.start.column
+        ancestor = ctx.parentCtx
+        while type(ancestor) != simplifiedJavaParser.MainFunctionContext and type(ancestor) != simplifiedJavaParser.FunctionContext:
+            ancestor = ancestor.parentCtx
         ctx.exprType = None
         ctx.value = None
         if ctx.getChildCount() == 1:
             if ctx.ID():
-                varIdentifier = ctx.ID().getText()
-                if varIdentifier in self.symbolTable:
-                    if not self.symbolTable[varIdentifier]["isInit"]:
-                        exit(f"{line}:{column} : Variable {varIdentifier} not initialized")
+                var = ctx.ID().getText()
+                symbolTable = self.symbolTable
+                if type(ancestor) == simplifiedJavaParser.MainFunctionContext:
+                    symbolTable = self.symbolTable
+                elif type(ancestor) == simplifiedJavaParser.FunctionContext:
+                    functionName = ancestor.getChild(0).ID().getText()
+                    parameters = self.symbolTable[functionName]["parameters"]
+                    symbolTable = dict(self.symbolTable[functionName], **parameters)
+                if var in symbolTable:
+                    if not symbolTable[var]["isInit"]:
+                        exit(f"line {line}:{column} Variable {var} not initialized")
                     else:
-                        ctx.exprType = self.symbolTable[varIdentifier]["type"]
+                        ctx.exprType = symbolTable[var]["type"]
                 else:
-                    exit(f"{line}:{column} : Variable {varIdentifier} not declared")
+                    exit(f"line {line}:{column} Variable {var} not declared")
             elif ctx.literal():
                 ctx.exprType = ctx.literal().varType
                 ctx.value = ctx.literal().value
@@ -228,12 +302,12 @@ class MyListener(simplifiedJavaListener):
                 if expression.exprType == "bool":
                     ctx.exprType = "bool"
                 else:
-                    exit(f"{line}:{column} : {expression.getText()} is not of type bool")
+                    exit(f"line {line}:{column} {expression.getText()} is not of type bool")
             elif op == '-':
                 if expression.exprType == "int" or expression.exprType == "float":
                     ctx.exprType = expression.exprType
                 else:
-                    exit(f"{line}:{column} : {expression.getText()} is not of type int or float")
+                    exit(f"line {line}:{column} {expression.getText()} is not of type int or float")
         elif ctx.getChildCount() == 3:
             if ctx.getChild(0).getText() == '(':
                 ctx.exprType = ctx.expression(0).exprType
@@ -243,18 +317,18 @@ class MyListener(simplifiedJavaListener):
                 expr2 = ctx.expression(1)
                 if op == '+' or op == '-' or op == '*':
                     if expr1.exprType != "int" and expr1.exprType != "float":
-                        exit(f"{line}:{column} : {expr1.getText()} is not of type int or float")
+                        exit(f"line {line}:{column} {expr1.getText()} is not of type int or float")
                     elif expr2.exprType != "int" and expr2.exprType != "float":
-                        exit(f"{line}:{column} : {expr2.getText()} is not of type int or float")
+                        exit(f"line {line}:{column} {expr2.getText()} is not of type int or float")
                     elif expr1.exprType == expr2.exprType:
                         ctx.exprType = expr1.exprType
                     elif expr1.exprType == "float" or expr2.exprType == "float":
                         ctx.exprType = "float"
                 elif op == '/':
                     if expr1.exprType != "int" and expr1.exprType != "float":
-                        exit(f"{line}:{column} : {expr1.getText()} is not of type int or float")
+                        exit(f"line {line}:{column} {expr1.getText()} is not of type int or float")
                     elif expr2.exprType != "int" and expr2.exprType != "float":
-                        exit(f"{line}:{column} : {expr2.getText()} is not of type int or float")
+                        exit(f"line {line}:{column} {expr2.getText()} is not of type int or float")
                     else:
                         ctx.exprType = "float"
                 elif op == '<' or op == '>' or op == '<=' or op == '>=' or op == '==' or op == '!=':
@@ -265,7 +339,7 @@ class MyListener(simplifiedJavaListener):
                     elif expr1.exprType == "float" and expr2.exprType == "int":
                         ctx.exprType = "bool"
                     else:
-                        exit(f"{line}:{column} : Cannot compare {expr1.exprType} with {expr2.exprType}")
+                        exit(f"line {line}:{column} Cannot compare {expr1.exprType} with {expr2.exprType}")
 
                 # if op == '+':
                 #     ctx.value = expr1.value + expr2.value

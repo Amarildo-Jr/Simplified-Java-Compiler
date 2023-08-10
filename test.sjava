@@ -1,32 +1,43 @@
 media (float n1, float n2) : float
     var:
+        a, b, temp : int;
+        bol : bool;
         m : float;
-    m = 3.2;
-    return m;
+    m = (n1 + n2) / 2;
+    scanf(a, b, m);
+    scanf(m);
+    while (a < 10):
+        temp = a;
+        a = b;
+        b = temp + b;
+        if (a == 5):
+            bol = true;
+        else:
+            bol = false;
+            break;
+        end
+    end
+    return 7.9;
 end
 
 main:
     var:
         a, b, temp : int;
-        c, d : float;
-        st : str;
         bol : bool;
-        const i = 10, j = "a";
-        const k = 10.0, l = true;
-        teste1, teste2, teste3 : float;
-    a = 10; c = 10.0; d = 10.0;
-    st = "Hello World";
-    bol = !(56 == 32);
-    bol = c + d == k;
-    bol = !l;
-    bol = "Hello World" != "Hello World";
-    bol = !(20.77 + (---(20 - 232) * 2 / 2) == ---23/1/1/1/(56-1/(3*1)));
-    temp = -a;
-    temp = 20.77 + ((20 - 232) * -2);
-    temp = k + i + temp;
-    c = -1233 + 214;
-    d = 123.123 + 123.123;
-    teste1 = 1.2;
-    teste2 = 3.2;
-    teste3 = media(teste1, teste2);
+        const it = 10;
+        //teste1, teste2, teste3 : float;
+    scanf(a, b);
+    scanf(a, b);
+    while (a < 10):
+        temp = a;
+        a = b;
+        b = temp + b;
+        if (a == 5):
+            bol = true;
+        else:
+            bol = false;
+            break;
+        end
+    end
+    //teste3 = media(teste1, teste2);
 end
