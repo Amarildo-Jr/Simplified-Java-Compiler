@@ -1,3 +1,10 @@
+media (float n1, float n2) : float
+    var:
+        m : float;
+    m = 3.2;
+    return m;
+end
+
 main:
     var:
         a, b, temp : int;
@@ -6,6 +13,7 @@ main:
         bol : bool;
         const i = 10, j = "a";
         const k = 10.0, l = true;
+        teste1, teste2, teste3 : float;
     a = 10; c = 10.0; d = 10.0;
     st = "Hello World";
     bol = !(56 == 32);
@@ -18,4 +26,7 @@ main:
     temp = k + i + temp;
     c = -1233 + 214;
     d = 123.123 + 123.123;
+    teste1 = 1.2;
+    teste2 = 3.2;
+    teste3 = media(teste1, teste2);
 end
