@@ -1,33 +1,27 @@
-media (float n1, float n2) : float
+media2(float n1, float n2) : float
     var:
-        a, b, temp : int;
-        bol : bool;
         m : float;
     m = (n1 + n2) / 2;
-    scanf(a, b, m);
-    scanf(m);
-    while (a < 10):
-        temp = a;
-        a = b;
-        b = temp + b;
-        if (a == 5):
-            bol = true;
-        else:
-            bol = false;
-            break;
-        end
-    end
-    return 7.9;
+    return m;
+end
+
+media (float n1, float n2) : float
+    var:
+        abacadabra : float;
+    abacadabra = media2(n1, n2);
+    return media2(n1, n2);
 end
 
 main:
     var:
         a, b, temp : int;
+        n1, n2 : float;
         bol : bool;
         const it = 10;
-        //teste1, teste2, teste3 : float;
+        teste1, teste2, teste3 : float;
     scanf(a, b);
-    scanf(a, b);
+    scanf(teste1, teste2);
+    print(a, b);
     while (a < 10):
         temp = a;
         a = b;
@@ -39,5 +33,6 @@ main:
             break;
         end
     end
-    //teste3 = media(teste1, teste2);
+    bol = 34 > a;
+    teste3 = media(teste1, teste2);
 end
