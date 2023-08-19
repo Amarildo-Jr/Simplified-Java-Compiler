@@ -1,38 +1,35 @@
-media2(float n1, float n2) : float
+fatorial (int fat) : int
+    if (fat > 1):
+        print (fat);
+        return fat * fatorial(fat - 1);
+    else:
+        return 1;
+    end
+end
+
+mostrarMedia (int v1, int v2) : void
     var:
-        m : float;
-    m = (n1 + n2) / 2;
-    return m;
+        x : float;
+        y : int;
+    x = (v1+v2)/2;
+    print ("Resultado: ", x);
 end
 
 media (float n1, float n2) : float
     var:
-        abacadabra : float;
-    abacadabra = media2(n1, n2);
-    return media2(n1, n2);
+        m : float;
+    m = (n1 + n2)/2;
+    return m;
 end
 
 main:
     var:
-        a, b, temp : int;
-        n1, n2 : float;
-        bol : bool;
-        const it = 10;
-        teste1, teste2, teste3 : float;
-    scanf(a, b);
-    scanf(teste1, teste2);
-    print(a, b);
-    while (a < 10):
-        temp = a;
-        a = b;
-        b = temp + b;
-        if (a == 5):
-            bol = true;
-        else:
-            bol = false;
-            break;
-        end
-    end
-    bol = 34 > a;
-    teste3 = media(teste1, teste2);
+    numero : int;
+        n1, n2 : int;
+    print ("Programa Fatorial. Digite o valor?");
+    scanf(numero);
+    print(fatorial(numero));
+    print ("Programa Media. Digite os valores?");
+    scanf(n1, n2);
+    mostrarMedia(n1, n2);
 end
