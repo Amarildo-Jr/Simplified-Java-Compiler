@@ -1,14 +1,17 @@
-media (float n1, float n2) : float
+media (int n1, int n2) : float
     var:
         m : float;
     m = 3.2;
+
     return m;
 end
 
 main:
     var:
-        teste1, teste2, teste3 : float;
-    teste1 = 1.2;
-    teste2 = 3.2;
-    teste3 = media(teste1, teste2);
+        teste1, teste2, teste3 : int;
+        flag: bool;
+    flag = teste1 > teste2;
+    teste1 = 1;
+    teste2 = 3;
+    teste3 = media1(teste1, teste2);
 end
