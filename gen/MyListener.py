@@ -143,7 +143,7 @@ class MyListener(simplifiedJavaListener):
         for key, value in self.symbolTable[functionName]["parameters"].items():
             ctx.code += self.translateTypeJasmin(value["type"])
         ctx.code += f"){self.translateTypeJasmin(functionReturn)}\n"
-        ctx.code += f".limit locals {qtLocalVariables + qtParameters}\n"
+        ctx.code += f".limit locals {qtLocalVariables + qtParameters + 3}\n"
         ctx.code += f".limit stack 100\n"
         if ctx.variableDeclarationArea() is not None:
             ctx.code += ctx.variableDeclarationArea().code
@@ -245,7 +245,7 @@ class MyListener(simplifiedJavaListener):
     def exitMainFunction(self, ctx: simplifiedJavaParser.MainFunctionContext):
         qtVariables = len(self.symbolTable)
         ctx.code = f".method public static main([Ljava/lang/String;)V\n"
-        ctx.code += f".limit locals {qtVariables}\n"
+        ctx.code += f".limit locals {qtVariables + 3}\n"
         ctx.code += f".limit stack 100\n"
         if self.hasScanf:
             ctx.code += self.readerInit(0)
@@ -348,11 +348,14 @@ class MyListener(simplifiedJavaListener):
                 functionName = functionDeclarationCtx.ID().getText()
                 self.symbolTable[functionName]["value"] = ctx.expression().value
         if child.getText() == "break":
-            while type(ctx.parentCtx) != simplifiedJavaParser.WhileCmdContext and type(
-                    ctx.parentCtx) != simplifiedJavaParser.ProgramContext:
-                ctx = ctx.parentCtx
-            if type(ctx.parentCtx) == simplifiedJavaParser.ProgramContext:
+            ancestor = ctx.parentCtx
+            while type(ancestor) != simplifiedJavaParser.WhileCmdContext and type(
+                    ancestor) != simplifiedJavaParser.ProgramContext:
+                ancestor = ancestor.parentCtx
+            if type(ancestor) == simplifiedJavaParser.ProgramContext:
                 exit(f"line {line}:{column} Break command only allowed in while commands")
+            else:
+                ctx.code = f"goto _actualWhileEnd_\n"
 
     # Exit a parse tree produced by simplifiedJavaParser#controlCmd.
     def exitControlCmd(self, ctx: simplifiedJavaParser.ControlCmdContext):
@@ -384,15 +387,27 @@ class MyListener(simplifiedJavaListener):
 
     # Exit a parse tree produced by simplifiedJavaParser#whileCmd.
     def exitWhileCmd(self, ctx: simplifiedJavaParser.WhileCmdContext):
+        ctx.labelNum = self.qtLabels
+        ancestor = ctx.parentCtx
+        while type(ancestor) != simplifiedJavaParser.MainFunctionContext and type(
+                ancestor) != simplifiedJavaParser.FunctionContext:
+            ancestor = ancestor.parentCtx
+        if type(ancestor) == simplifiedJavaParser.MainFunctionContext:
+            ctx.labelNum = self.qtLabels
+        else:
+            functionName = ancestor.getChild(0).ID().getText()
+            ctx.labelNum = self.symbolTable[functionName]["qtLabels"]
         ctx.code = ""
-        ctx.code += f"Lbegin{self.qtLabels}:\n"
+        ctx.code += f"Lbegin{ctx.labelNum}:\n"
         ctx.code += ctx.expression().code
         ctx.code = ctx.code.replace("placeholder", "", 1)
         if ctx.cmdBlock() is not None:
-            ctx.code = ctx.code.replace("placeholder", f"{ctx.cmdBlock().code}\ngoto Lbegin{self.qtLabels}", 1)
+            ctx.code = ctx.code.replace("placeholder", f"{ctx.cmdBlock().code}\ngoto Lbegin{ctx.labelNum}", 1)
         else:
-            ctx.code = ctx.code.replace("placeholder", f"goto Lbegin{self.qtLabels}", 1)
-        self.qtLabels += 1
+            ctx.code = ctx.code.replace("placeholder", f"goto Lbegin{ctx.labelNum}", 1)
+        ctx.code += f"Lafter{ctx.labelNum}:\n"
+        ctx.code = ctx.code.replace("_actualWhileEnd_", f"Lafter{ctx.labelNum}")
+        ctx.labelNum += 1
 
     def exitAttributionList(self, ctx: simplifiedJavaParser.AttributionListContext):
         ctx.code = ""
@@ -619,8 +634,7 @@ class MyListener(simplifiedJavaListener):
                 if expression.exprType == "bool":
                     ctx.exprType = "bool"
                     ctx.code = expression.code
-                    ctx.code += f"iconst_1\n"
-                    ctx.code += f"ixor\n"
+                    ctx.code = ctx.code.replace("\n", "\niconst_1\nixor\n", 1)
                 else:
                     exit(f"line {line}:{column} {expression.getText()} is not of type bool")
             elif op == '-':

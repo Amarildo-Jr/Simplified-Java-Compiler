@@ -25,11 +25,14 @@ end
 main:
     var:
     numero : int;
-        n1, n2 : int;
-    print ("Programa Fatorial. Digite o valor?");
-    scanf(numero);
-    print(fatorial(numero));
-    print ("Programa Media. Digite os valores?");
-    scanf(n1, n2);
-    mostrarMedia(n1, n2);
+        n1, n2, i : int;
+    i = 0;
+    while (i < 10):
+        print(i);
+        if(i == 15 - (99 - 89) * 3 / 3):
+            print ("acabouuuuu");
+            break;
+        end
+        i = i + 1;
+    end
 end
