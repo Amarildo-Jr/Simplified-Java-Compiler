@@ -407,7 +407,10 @@ class MyListener(simplifiedJavaListener):
             ctx.code = ctx.code.replace("placeholder", f"goto Lbegin{ctx.labelNum}", 1)
         ctx.code += f"Lafter{ctx.labelNum}:\n"
         ctx.code = ctx.code.replace("_actualWhileEnd_", f"Lafter{ctx.labelNum}")
-        ctx.labelNum += 1
+        if type(ancestor) == simplifiedJavaParser.MainFunctionContext:
+            self.qtLabels += 1
+        else:
+            self.symbolTable[functionName]["qtLabels"] += 1
 
     def exitAttributionList(self, ctx: simplifiedJavaParser.AttributionListContext):
         ctx.code = ""
@@ -536,17 +539,17 @@ class MyListener(simplifiedJavaListener):
                     ctx.code = ctx.code.replace("placeholder",
                                                 f"getstatic java/lang/System/out Ljava/io/PrintStream;\n"
                                                 f"iconst_0\n"
-                                                f"invokevirtual java/io/PrintStream/println("
+                                                f"invokevirtual java/io/PrintStream/print("
                                                 f"{self.translateTypeJasmin(expression.exprType)})V\n", 1)
                     ctx.code = ctx.code.replace("placeholder",
                                                 f"getstatic java/lang/System/out Ljava/io/PrintStream;\n"
                                                 f"iconst_1\n"
-                                                f"invokevirtual java/io/PrintStream/println("
+                                                f"invokevirtual java/io/PrintStream/print("
                                                 f"{self.translateTypeJasmin(expression.exprType)})V\n", 1)
                 else:
                     ctx.code += f"getstatic java/lang/System/out Ljava/io/PrintStream;\n"
                     ctx.code += expression.code
-                    ctx.code += f"invokevirtual java/io/PrintStream/println({self.translateTypeJasmin(expression.exprType)})V\n"
+                    ctx.code += f"invokevirtual java/io/PrintStream/print({self.translateTypeJasmin(expression.exprType)})V\n"
 
 
     # Exit a parse tree produced by simplifiedJavaParser#expressionList.

@@ -1,38 +1,26 @@
-fatorial (int fat) : int
-    if (fat > 1):
-        print (fat);
-        return fat * fatorial(fat - 1);
-    else:
-        return 1;
-    end
-end
-
-mostrarMedia (int v1, int v2) : void
-    var:
-        x : float;
-        y : int;
-    x = (v1+v2)/2;
-    print ("Resultado: ", x);
-end
-
-media (float n1, float n2) : float
-    var:
-        m : float;
-    m = (n1 + n2)/2;
-    return m;
-end
-
 main:
     var:
-    numero : int;
-        n1, n2, i : int;
+    i, j : int;
     i = 0;
-    while (i < 10):
-        print(i);
-        if(i == 15 - (99 - 89) * 3 / 3):
-            print ("acabouuuuu");
-            break;
-        end
+    j = 0;
+    while(i < 3):
         i = i + 1;
+        break;
+        j = j + 1;
+        print("oi");
+        scanf(i);
+        break;
+        if(i > j):
+            print("entrei no if\n");
+        else:
+            print("entrei no else\n");
+        end
+        while(i < 2):
+            if(i == 0):
+                print("oi");
+            end
+        end
     end
+    print(i, "\n");
+    print(j);
 end
