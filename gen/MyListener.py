@@ -338,12 +338,16 @@ class MyListener(simplifiedJavaListener):
 
                 if type(functionCtx) == simplifiedJavaParser.FunctionContext:
                     functionType = functionDeclarationCtx.type_().getText()
-                    if functionType != ctx.expression().exprType:
+                    ctx.code = ctx.expression().code
+                    if functionType == "int" and ctx.expression().exprType == "float":
+                        ctx.code += f"f2i\n"
+                    elif functionType == "float" and ctx.expression().exprType == "int":
+                        ctx.code += f"i2f\n"
+                    elif functionType != ctx.expression().exprType:
                         exit(
                             f"line {line}:{column} Function {functionDeclarationCtx.ID().getText()} "
                             f"expects {functionType} type return, "
                             f"but {ctx.expression().exprType} was given")
-                    ctx.code = ctx.expression().code
                     ctx.code += f"{self.translateTypeJasmin(functionType, True).lower()}return\n"
                 functionName = functionDeclarationCtx.ID().getText()
                 self.symbolTable[functionName]["value"] = ctx.expression().value

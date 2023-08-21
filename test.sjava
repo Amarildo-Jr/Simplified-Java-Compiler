@@ -1,26 +1,10 @@
-main:
+testFloat(int a, int b): float
     var:
-    i, j : int;
-    i = 0;
-    j = 0;
-    while(i < 3):
-        i = i + 1;
-        break;
-        j = j + 1;
-        print("oi");
-        scanf(i);
-        break;
-        if(i > j):
-            print("entrei no if\n");
-        else:
-            print("entrei no else\n");
-        end
-        while(i < 2):
-            if(i == 0):
-                print("oi");
-            end
-        end
-    end
-    print(i, "\n");
-    print(j);
+        c: int;
+    c = a + b;
+    return c;
+end
+
+main:
+print(testFloat(1, 2));
 end
