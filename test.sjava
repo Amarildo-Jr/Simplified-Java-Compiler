@@ -1,10 +1,32 @@
-testFloat(int a, int b): float
-    var:
-        c: int;
-    c = a + b;
-    return c;
+fatorial (int fat) : int
+if (fat > 1):
+print (fat, "\n");
+return fat * fatorial(fat - 1);
+else:
+return 1;
 end
-
+end
+mostrarMedia (int v1, int v2) : void
+var:
+x : float;
+y : int;
+x = (v1+v2)/2;
+print ("Resultado: ", x);
+end
+media (float n1, float n2) : float
+var:
+m : float;
+m = (n1 + n2)/2;
+return m;
+end
 main:
-print(testFloat(1, 2));
+var:
+numero : int;
+n1, n2 : int;
+print ("Programa Fatorial. Digite o valor?", "\n");
+scanf(numero);
+print(fatorial(numero), "\n");
+print ("Programa Media. Digite o valores?", "\n");
+scanf(n1, n2);
+mostrarMedia(n1, n2);
 end

@@ -8,11 +8,12 @@ else:
 
 class MyListener(simplifiedJavaListener):
     symbolTable: dict = {}
+    fileName = "code"
 
     def __init__(self):
         super().__init__()
-        self.jasminFile = open("teste.j", "w")
-        self.jasminFile.write(".class public teste\n")
+        self.jasminFile = open(f"{self.fileName}.j", "w")
+        self.jasminFile.write(f".class public {self.fileName}\n")
         self.jasminFile.write(".super java/lang/Object\n")
         self.qtVariables = 1
         self.qtLabels = 0
@@ -236,7 +237,7 @@ class MyListener(simplifiedJavaListener):
         ctx.functionName = functionName
         ctx.functionReturn = self.symbolTable[functionName]["type"]
         ctx.hasReturn = self.symbolTable[functionName]["hasReturn"]
-        ctx.code += f"invokestatic teste/{functionName}("
+        ctx.code += f"invokestatic {self.fileName}/{functionName}("
         for key, value in self.symbolTable[functionName]["parameters"].items():
             ctx.code += self.translateTypeJasmin(value["type"])
         ctx.code += f"){self.translateTypeJasmin(self.symbolTable[functionName]['type'])}\n"
