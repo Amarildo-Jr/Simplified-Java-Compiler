@@ -1,4 +1,4 @@
-# Generated from C:/Repositórios/Projetos/UFPI/Compiladores/Simplified-Java-Compiler\simplifiedJava.g4 by ANTLR 4.12.0
+# Generated from C:/Repositï¿½rios/Projetos/UFPI/Compiladores/Simplified-Java-Compiler\simplifiedJava.g4 by ANTLR 4.12.0
 # encoding: utf-8
 from antlr4 import *
 from io import StringIO
@@ -245,7 +245,6 @@ class simplifiedJavaParser ( Parser ):
 
 
     def program(self):
-
         localctx = simplifiedJavaParser.ProgramContext(self, self._ctx, self.state)
         self.enterRule(localctx, 0, self.RULE_program)
         self._la = 0 # Token type
